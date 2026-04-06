@@ -7,6 +7,15 @@ interface Props {
 
 type LoadState = 'loading' | 'loaded' | 'blocked';
 
+// Upgrade http:// to https:// when the app itself is on HTTPS to avoid
+// mixed-content blocks. The original URL is kept for "open in new tab".
+function toSecureUrl(raw: string): string {
+  if (window.location.protocol === 'https:' && raw.startsWith('http://')) {
+    return raw.replace(/^http:\/\//, 'https://');
+  }
+  return raw;
+}
+
 export function WebsitePanel({ url, company }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -14,20 +23,22 @@ export function WebsitePanel({ url, company }: Props) {
   const [loadCount, setLoadCount] = useState(0); // >1 means back is possible
   const [popupOpened, setPopupOpened] = useState(false);
 
+  const secureUrl = toSecureUrl(url);
+
   // Reset when the source URL changes (new row)
   useEffect(() => {
     setLoadState('loading');
-    setDisplayUrl(url);
+    setDisplayUrl(secureUrl);
     setLoadCount(0);
     setPopupOpened(false);
-  }, [url]);
+  }, [url]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Called when we detect blocking. autoOpen=true when inside an event handler
   // (popup allowed); false when from a timeout (popup blocker will suppress it).
   const markBlocked = (autoOpen: boolean) => {
     setLoadState('blocked');
     if (autoOpen) {
-      const tab = window.open(url, '_blank', 'noopener,noreferrer');
+      const tab = window.open(secureUrl, '_blank', 'noopener,noreferrer');
       setPopupOpened(tab !== null);
     } else {
       setPopupOpened(false);
@@ -208,7 +219,7 @@ export function WebsitePanel({ url, company }: Props) {
 
         <iframe
           ref={iframeRef}
-          src={url}
+          src={secureUrl}
           onLoad={handleLoad}
           className={`w-full h-full border-0 transition-opacity duration-200 ${
             loadState === 'loading' ? 'opacity-0' : 'opacity-100'
