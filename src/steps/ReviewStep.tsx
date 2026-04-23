@@ -4,6 +4,7 @@ import type { ReviewRow } from '../lib/types';
 import { EmailPreview } from '../components/EmailPreview';
 import { WebsitePanel } from '../components/WebsitePanel';
 import { TemplateEditor } from '../components/TemplateEditor';
+import { RowDetailsModal } from '../components/RowDetailsModal';
 import { useKeyboardNav } from '../hooks/useKeyboardNav';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 
 export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateChange, onUpdate, onFinish }: Props) {
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
+  const [showRowDetails, setShowRowDetails] = useState(false);
 
   // Resizable split
   const [leftPct, setLeftPct] = useState(33);
@@ -94,7 +96,7 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
     onPrev: prev,
     onInvalid: markInvalid,
     onOpenTab: openTab,
-    enabled: !showTemplateEditor,
+    enabled: !showTemplateEditor && !showRowDetails,
   });
 
   if (!row) return null;
@@ -182,6 +184,7 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
             row={row}
             template={template}
             onLineChange={handleLineChange}
+            onViewAllFields={() => setShowRowDetails(true)}
           />
 
           {/* Confirm button */}
@@ -235,6 +238,13 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
           open tab
         </span>
       </div>
+
+      {showRowDetails && (
+        <RowDetailsModal
+          raw={row.raw}
+          onClose={() => setShowRowDetails(false)}
+        />
+      )}
 
       {showTemplateEditor && (
         <TemplateEditor

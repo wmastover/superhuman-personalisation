@@ -62,7 +62,22 @@ export default function App() {
   }, [rawRows]);
 
   const handleRowUpdate = useCallback((index: number, updates: Partial<ReviewRow>) => {
-    setRows(prev => prev.map((r, i) => i === index ? { ...r, ...updates } : r));
+    setRows((prev) => {
+      const updatedRow = { ...prev[index], ...updates };
+      if (updates.status === 'edited' || updates.status === 'approved') {
+        const lineChanged = updatedRow.personalisedLine !== updatedRow.originalPersonalisedLine;
+        if (lineChanged) {
+          return prev.map((r, i) => {
+            if (i === index) return updatedRow;
+            if (r.status === 'pending' && r.domain === updatedRow.domain) {
+              return { ...r, personalisedLine: updatedRow.personalisedLine };
+            }
+            return r;
+          });
+        }
+      }
+      return prev.map((r, i) => (i === index ? updatedRow : r));
+    });
   }, []);
 
   const handleFinish = useCallback(() => {
@@ -70,7 +85,6 @@ export default function App() {
   }, []);
 
   const handleRestart = useCallback(() => {
-    if (sessionId) deleteSession(sessionId);
     setSessionId(null);
     setSessionName('');
     setRawRows([]);
@@ -88,10 +102,11 @@ export default function App() {
     setRawRows(session.rawRows);
     setHeaders(session.headers);
     setColMap(session.colMap);
-    setRows(session.rows);
+    setRows(session.rows.map((r) => ({ ...r, jobTitle: r.jobTitle ?? '' })));
     setTemplate(session.template);
     setCursor(session.cursor);
-    setStep(session.step);
+    // Archived (export-step) sessions reopen directly into review
+    setStep(session.step === 'export' ? 'review' : session.step);
   }, []);
 
   const handleDeleteSession = useCallback((id: string) => {
@@ -135,6 +150,7 @@ export default function App() {
           headers={headers}
           colMap={colMap}
           onRestart={handleRestart}
+          onBackToReview={() => setStep('review')}
         />
       )}
     </div>

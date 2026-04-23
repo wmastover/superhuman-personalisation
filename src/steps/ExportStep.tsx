@@ -9,9 +9,10 @@ interface Props {
   headers: string[];
   colMap: ColumnMap;
   onRestart: () => void;
+  onBackToReview: () => void;
 }
 
-export function ExportStep({ rows, headers, colMap, onRestart }: Props) {
+export function ExportStep({ rows, headers, colMap, onRestart, onBackToReview }: Props) {
   useEffect(() => {
     const end = Date.now() + 2000;
     const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -76,9 +77,15 @@ export function ExportStep({ rows, headers, colMap, onRestart }: Props) {
             <span className="text-green-500 mt-0.5">✓</span>
             All original columns preserved unchanged
           </li>
+          {colMap.personalisedLine && (
+            <li className="flex items-start gap-2">
+              <span className="text-green-500 mt-0.5">✓</span>
+              <code className="bg-gray-100 px-1 rounded text-xs">{colMap.personalisedLine}</code> column preserved with original AI text
+            </li>
+          )}
           <li className="flex items-start gap-2">
             <span className="text-green-500 mt-0.5">✓</span>
-            <code className="bg-gray-100 px-1 rounded text-xs">{colMap.personalisedLine}</code> column updated with any edits you made
+            New <code className="bg-gray-100 px-1 rounded text-xs">accepted_personalised_line</code> column with your reviewed lines
           </li>
           <li className="flex items-start gap-2">
             <span className="text-green-500 mt-0.5">✓</span>
@@ -93,6 +100,15 @@ export function ExportStep({ rows, headers, colMap, onRestart }: Props) {
           className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
         >
           Start over
+        </button>
+        <button
+          onClick={onBackToReview}
+          className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to review
         </button>
         <button
           onClick={handleExport}

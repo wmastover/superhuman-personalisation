@@ -9,10 +9,11 @@ interface FieldSpec {
 }
 
 const FIELDS: FieldSpec[] = [
-  { key: 'personalisedLine', label: 'Personalised Line', required: true, description: 'The AI-generated opening line to review' },
+  { key: 'personalisedLine', label: 'Personalised Line', required: false, description: 'The AI-generated opening line — leave unmapped to write lines from scratch' },
   { key: 'domain', label: 'Company Website / Domain', required: true, description: 'Used to load the website on the right panel' },
   { key: 'name', label: 'First Name', required: false, description: 'Used in the email greeting' },
   { key: 'company', label: 'Company Name', required: false, description: 'For reference while reviewing' },
+  { key: 'jobTitle', label: 'Job Title', required: false, description: 'For reference while reviewing' },
   { key: 'linkedinUrl', label: 'LinkedIn URL', required: false, description: 'For reference while reviewing' },
 ];
 
@@ -36,6 +37,7 @@ export function MappingStep({ rows, headers, onConfirm, onBack }: Props) {
     auto.domain = match(['domain', 'website', 'url', 'site']);
     auto.name = match(['firstname', 'name', 'first']);
     auto.company = match(['company', 'org', 'organization', 'organisation']);
+    auto.jobTitle = match(['jobtitle', 'title', 'role', 'position']);
     auto.linkedinUrl = match(['linkedin']);
     return auto;
   });
@@ -44,10 +46,10 @@ export function MappingStep({ rows, headers, onConfirm, onBack }: Props) {
     setMapping(prev => ({ ...prev, [key]: value === NONE ? undefined : value }));
   };
 
-  const canConfirm = !!(mapping.personalisedLine && mapping.domain);
+  const canConfirm = !!mapping.domain;
 
   const handleConfirm = () => {
-    if (!mapping.personalisedLine || !mapping.domain) return;
+    if (!mapping.domain) return;
     onConfirm(mapping as ColumnMap);
   };
 

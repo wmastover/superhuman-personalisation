@@ -1,10 +1,11 @@
 export type RawRow = Record<string, string>;
 
 export interface ColumnMap {
-  personalisedLine: string;
+  personalisedLine?: string;
   domain: string;
   name?: string;
   company?: string;
+  jobTitle?: string;
   linkedinUrl?: string;
 }
 
@@ -18,6 +19,7 @@ export interface ReviewRow {
   domain: string;
   name: string;
   company: string;
+  jobTitle: string;
   linkedinUrl: string;
   status: ReviewStatus;
 }

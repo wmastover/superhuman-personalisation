@@ -5,6 +5,11 @@ interface Props {
   row: ReviewRow;
   template: string;
   onLineChange: (val: string) => void;
+  onViewAllFields: () => void;
+}
+
+function fieldValue(text: string) {
+  return text.trim() === '' ? <span className="text-gray-300">—</span> : text;
 }
 
 function AutoTextarea({
@@ -44,7 +49,7 @@ function AutoTextarea({
   );
 }
 
-export function EmailPreview({ row, template, onLineChange }: Props) {
+export function EmailPreview({ row, template, onLineChange, onViewAllFields }: Props) {
   const [lineValue, setLineValue] = useState(row.personalisedLine);
 
   useEffect(() => {
@@ -64,25 +69,27 @@ export function EmailPreview({ row, template, onLineChange }: Props) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email Preview</span>
-          {row.name && (
-            <span className="text-xs text-gray-400">
-              — {row.name}{row.company ? `, ${row.company}` : ''}
-            </span>
-          )}
+      <div className="flex items-start justify-between gap-4 px-5 py-3 border-b border-gray-100 shrink-0">
+        <div className="min-w-0 flex flex-col gap-0.5 text-xs">
+          <span className="text-gray-900 font-semibold truncate">{fieldValue(row.name)}</span>
+          <span className="text-gray-700 truncate">{fieldValue(row.jobTitle)}</span>
+          <span className="text-gray-700 truncate">{fieldValue(row.company)}</span>
         </div>
-        <div className="flex items-center gap-3 text-xs text-gray-400">
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 rounded-sm bg-gray-900" />
-            personalised
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 rounded-sm bg-gray-300" />
-            template
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={onViewAllFields}
+          className="shrink-0 text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          View all fields
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto bg-gray-100 flex justify-center py-6 px-4">

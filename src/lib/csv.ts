@@ -14,7 +14,7 @@ export function parseCSV(file: File): Promise<RawRow[]> {
 
 export function buildReviewRows(rawRows: RawRow[], colMap: ColumnMap): ReviewRow[] {
   return rawRows.map((raw, index) => {
-    const original = raw[colMap.personalisedLine] ?? '';
+    const original = colMap.personalisedLine ? (raw[colMap.personalisedLine] ?? '') : '';
     return {
       index,
       raw,
@@ -23,6 +23,7 @@ export function buildReviewRows(rawRows: RawRow[], colMap: ColumnMap): ReviewRow
       domain: normaliseDomain(raw[colMap.domain] ?? ''),
       name: colMap.name ? (raw[colMap.name] ?? '') : '',
       company: colMap.company ? (raw[colMap.company] ?? '') : '',
+      jobTitle: colMap.jobTitle ? (raw[colMap.jobTitle] ?? '') : '',
       linkedinUrl: colMap.linkedinUrl ? (raw[colMap.linkedinUrl] ?? '') : '',
       status: 'pending' as ReviewStatus,
     };
@@ -43,8 +44,10 @@ export function exportCSV(
 ): void {
   const outputRows = rows.map((row) => {
     const out: RawRow = { ...row.raw };
-    // Preserve the original AI-generated text in the source column
-    out[colMap.personalisedLine] = row.originalPersonalisedLine ?? row.personalisedLine;
+    if (colMap.personalisedLine) {
+      // Preserve the original AI-generated text in the source column
+      out[colMap.personalisedLine] = row.originalPersonalisedLine ?? row.personalisedLine;
+    }
     // Write the human-reviewed/accepted version to a separate column
     out['accepted_personalised_line'] = row.personalisedLine;
     out['review_status'] = row.status;
