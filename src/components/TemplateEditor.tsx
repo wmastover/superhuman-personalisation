@@ -23,7 +23,7 @@ export function TemplateEditor({ template, onSave, onClose }: Props) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  const hasPersonalisedLine = value.includes('{{personalised_line}}');
+  const hasPersonalisedLine = /\{\{\s*(Personalization|personalised_line|personalized_line)\s*(\|[^}]*)?\}\}/.test(value);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -32,9 +32,12 @@ export function TemplateEditor({ template, onSave, onClose }: Props) {
           <div>
             <h2 className="text-base font-semibold text-gray-900">Edit Email Template</h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              Use <code className="bg-gray-100 px-1 rounded">{'{{personalised_line}}'}</code>,{' '}
-              <code className="bg-gray-100 px-1 rounded">{'{{name}}'}</code>,{' '}
-              <code className="bg-gray-100 px-1 rounded">{'{{company}}'}</code> as placeholders
+              Use Instantly-style merge tags like{' '}
+              <code className="bg-gray-100 px-1 rounded">{'{{Personalization}}'}</code>,{' '}
+              <code className="bg-gray-100 px-1 rounded">{'{{firstName}}'}</code>,{' '}
+              <code className="bg-gray-100 px-1 rounded">{'{{companyName}}'}</code>, or any CSV
+              column header. Add a fallback with{' '}
+              <code className="bg-gray-100 px-1 rounded">{'{{firstName | there}}'}</code>.
             </p>
           </div>
           <button
@@ -56,7 +59,7 @@ export function TemplateEditor({ template, onSave, onClose }: Props) {
 
           {!hasPersonalisedLine && (
             <div className="mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              ⚠ Template is missing <code>{'{{personalised_line}}'}</code> — this is where the reviewed line will appear.
+              ⚠ Template is missing <code>{'{{Personalization}}'}</code> — this is where the reviewed line will appear.
             </div>
           )}
         </div>

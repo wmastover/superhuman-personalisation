@@ -132,13 +132,14 @@ export default function App() {
         />
       )}
 
-      {step === 'review' && (
+      {step === 'review' && colMap && (
         <ReviewStep
           rows={rows}
           cursor={cursor}
           onCursorChange={setCursor}
           template={template}
           onTemplateChange={setTemplate}
+          colMap={colMap}
           onUpdate={handleRowUpdate}
           onFinish={handleFinish}
         />

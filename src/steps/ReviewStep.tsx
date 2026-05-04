@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
-import type { ReviewRow } from '../lib/types';
+import type { ColumnMap, ReviewRow } from '../lib/types';
 import { EmailPreview } from '../components/EmailPreview';
 import { WebsitePanel } from '../components/WebsitePanel';
 import { TemplateEditor } from '../components/TemplateEditor';
@@ -13,11 +13,12 @@ interface Props {
   onCursorChange: (cursor: number) => void;
   template: string;
   onTemplateChange: (template: string) => void;
+  colMap: ColumnMap;
   onUpdate: (index: number, updates: Partial<ReviewRow>) => void;
   onFinish: () => void;
 }
 
-export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateChange, onUpdate, onFinish }: Props) {
+export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateChange, colMap, onUpdate, onFinish }: Props) {
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [showRowDetails, setShowRowDetails] = useState(false);
 
@@ -183,6 +184,7 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
           <EmailPreview
             row={row}
             template={template}
+            colMap={colMap}
             onLineChange={handleLineChange}
             onViewAllFields={() => setShowRowDetails(true)}
           />
@@ -241,7 +243,10 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
 
       {showRowDetails && (
         <RowDetailsModal
-          raw={row.raw}
+          row={row}
+          template={template}
+          colMap={colMap}
+          onApplyPatch={(patch) => onUpdate(cursor, patch)}
           onClose={() => setShowRowDetails(false)}
         />
       )}

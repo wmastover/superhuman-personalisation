@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ReviewRow } from '../lib/types';
+import type { ColumnMap, ReviewRow } from '../lib/types';
+import {
+  PERSONALIZATION_SENTINEL,
+  substituteWithPersonalizationSentinel,
+} from '../lib/mergeTags';
 
 interface Props {
   row: ReviewRow;
   template: string;
+  colMap: ColumnMap;
   onLineChange: (val: string) => void;
   onViewAllFields: () => void;
 }
@@ -49,7 +54,7 @@ function AutoTextarea({
   );
 }
 
-export function EmailPreview({ row, template, onLineChange, onViewAllFields }: Props) {
+export function EmailPreview({ row, template, colMap, onLineChange, onViewAllFields }: Props) {
   const [lineValue, setLineValue] = useState(row.personalisedLine);
 
   useEffect(() => {
@@ -61,11 +66,8 @@ export function EmailPreview({ row, template, onLineChange, onViewAllFields }: P
     onLineChange(val);
   };
 
-  const filled = template
-    .replace(/\{\{name\}\}/gi, row.name || 'there')
-    .replace(/\{\{company\}\}/gi, row.company || 'your company');
-
-  const parts = filled.split(/(\{\{personalised_line\}\})/gi);
+  const filled = substituteWithPersonalizationSentinel(template, row, colMap);
+  const parts = filled.split(PERSONALIZATION_SENTINEL);
 
   return (
     <div className="h-full flex flex-col">
@@ -111,22 +113,14 @@ export function EmailPreview({ row, template, onLineChange, onViewAllFields }: P
 
           {/* Email body */}
           <div className="px-4 py-4 font-sans text-sm leading-6 flex-1">
-            {parts.map((part, i) => {
-              if (/\{\{personalised_line\}\}/i.test(part)) {
-                return (
-                  <AutoTextarea
-                    key={i}
-                    value={lineValue}
-                    onChange={handleChange}
-                  />
-                );
-              }
-              return (
-                <span key={i} className="text-gray-400 whitespace-pre-wrap">
-                  {part}
-                </span>
-              );
-            })}
+            {parts.map((part, i) => (
+              <span key={`segment-${i}`}>
+                <span className="text-gray-400 whitespace-pre-wrap">{part}</span>
+                {i < parts.length - 1 && (
+                  <AutoTextarea key={`line-${i}`} value={lineValue} onChange={handleChange} />
+                )}
+              </span>
+            ))}
           </div>
         </div>
       </div>

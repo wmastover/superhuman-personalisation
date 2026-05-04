@@ -26,11 +26,11 @@ export interface ReviewRow {
 
 export type AppStep = 'upload' | 'mapping' | 'review' | 'export';
 
-export const DEFAULT_TEMPLATE = `Hi {{name}},
+export const DEFAULT_TEMPLATE = `Hi {{firstName | there}},
 
-{{personalised_line}}
+{{Personalization}}
 
-I wanted to reach out because I think there's a real opportunity for us to work together.
+I wanted to reach out because I think there's a real opportunity for us at {{companyName | your company}} to work together.
 
 Would you be open to a quick 20-minute call this week?
 
