@@ -22,7 +22,17 @@ export interface ReviewRow {
   jobTitle: string;
   linkedinUrl: string;
   status: ReviewStatus;
+  invalidReason?: string;
+  editReason?: string;
 }
+
+export interface Reason {
+  text: string;
+  count: number;
+}
+
+/** @deprecated Use `Reason` instead. */
+export type InvalidReason = Reason;
 
 export type AppStep = 'upload' | 'mapping' | 'review' | 'export';
 

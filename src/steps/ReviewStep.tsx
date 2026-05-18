@@ -1,11 +1,18 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { ColumnMap, ReviewRow } from '../lib/types';
 import { EmailPreview } from '../components/EmailPreview';
 import { WebsitePanel } from '../components/WebsitePanel';
 import { TemplateEditor } from '../components/TemplateEditor';
 import { RowDetailsModal } from '../components/RowDetailsModal';
+import { ReasonPickerModal } from '../components/ReasonPickerModal';
 import { useKeyboardNav } from '../hooks/useKeyboardNav';
+import {
+  incrementEditReasonCount,
+  incrementInvalidReasonCount,
+  listEditReasons,
+  listInvalidReasons,
+} from '../lib/storage';
 
 interface Props {
   rows: ReviewRow[];
@@ -21,6 +28,8 @@ interface Props {
 export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateChange, colMap, onUpdate, onFinish }: Props) {
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [showRowDetails, setShowRowDetails] = useState(false);
+  const [showInvalidModal, setShowInvalidModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Resizable split
   const [leftPct, setLeftPct] = useState(33);
@@ -69,7 +78,11 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
   const confirm = useCallback(() => {
     const current = rows[cursor];
     const wasEdited = current.personalisedLine !== (current.originalPersonalisedLine ?? current.personalisedLine);
-    advance(wasEdited ? 'edited' : 'approved');
+    if (wasEdited) {
+      setShowEditModal(true);
+    } else {
+      advance('approved');
+    }
   }, [rows, cursor, advance]);
 
   const prev = useCallback(() => {
@@ -85,8 +98,33 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
   }, [advance]);
 
   const markInvalid = useCallback(() => {
-    advance('invalid');
-  }, [advance]);
+    setShowInvalidModal(true);
+  }, []);
+
+  const handleInvalidSubmit = useCallback((reason: string) => {
+    incrementInvalidReasonCount(reason);
+    onUpdate(cursor, { status: 'invalid', invalidReason: reason });
+    setShowInvalidModal(false);
+    if (cursor < total - 1) {
+      onCursorChange(cursor + 1);
+    } else {
+      onFinish();
+    }
+  }, [cursor, total, onUpdate, onCursorChange, onFinish]);
+
+  const handleEditSubmit = useCallback((reason: string) => {
+    incrementEditReasonCount(reason);
+    onUpdate(cursor, { status: 'edited', editReason: reason });
+    setShowEditModal(false);
+    if (cursor < total - 1) {
+      onCursorChange(cursor + 1);
+    } else {
+      onFinish();
+    }
+  }, [cursor, total, onUpdate, onCursorChange, onFinish]);
+
+  const invalidReasons = useMemo(() => (showInvalidModal ? listInvalidReasons() : []), [showInvalidModal]);
+  const editReasons = useMemo(() => (showEditModal ? listEditReasons() : []), [showEditModal]);
 
   const openTab = useCallback(() => {
     if (row.domain) window.open(row.domain, '_blank', 'noopener,noreferrer');
@@ -97,7 +135,7 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
     onPrev: prev,
     onInvalid: markInvalid,
     onOpenTab: openTab,
-    enabled: !showTemplateEditor && !showRowDetails,
+    enabled: !showTemplateEditor && !showRowDetails && !showInvalidModal && !showEditModal,
   });
 
   if (!row) return null;
@@ -131,6 +169,22 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
             {rows.filter(r => r.status === 'invalid').length > 0 && (
               <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">
                 {rows.filter(r => r.status === 'invalid').length} invalid
+              </span>
+            )}
+            {row.status === 'invalid' && row.invalidReason && (
+              <span
+                className="text-xs bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full font-medium max-w-xs truncate"
+                title={`Invalid reason: ${row.invalidReason}`}
+              >
+                Invalid: {row.invalidReason}
+              </span>
+            )}
+            {row.status === 'edited' && row.editReason && (
+              <span
+                className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-medium max-w-xs truncate"
+                title={`Edit reason: ${row.editReason}`}
+              >
+                Edit: {row.editReason}
               </span>
             )}
           </div>
@@ -256,6 +310,42 @@ export function ReviewStep({ rows, cursor, onCursorChange, template, onTemplateC
           template={template}
           onSave={onTemplateChange}
           onClose={() => setShowTemplateEditor(false)}
+        />
+      )}
+
+      {showInvalidModal && (
+        <ReasonPickerModal
+          title="Mark as invalid"
+          description={
+            <>
+              Pick a reason — type to filter, press{' '}
+              <kbd className="font-mono bg-gray-100 px-1 rounded">1</kbd>–
+              <kbd className="font-mono bg-gray-100 px-1 rounded">9</kbd> to choose, or{' '}
+              <kbd className="font-mono bg-gray-100 px-1 rounded">Enter</kbd> to confirm. Type a new reason to add it.
+            </>
+          }
+          reasons={invalidReasons}
+          accent="red"
+          onSubmit={handleInvalidSubmit}
+          onCancel={() => setShowInvalidModal(false)}
+        />
+      )}
+
+      {showEditModal && (
+        <ReasonPickerModal
+          title="Why did you edit this line?"
+          description={
+            <>
+              Pick a reason — type to filter, press{' '}
+              <kbd className="font-mono bg-gray-100 px-1 rounded">1</kbd>–
+              <kbd className="font-mono bg-gray-100 px-1 rounded">9</kbd> to choose, or{' '}
+              <kbd className="font-mono bg-gray-100 px-1 rounded">Enter</kbd> to confirm. Type a new reason to add it.
+            </>
+          }
+          reasons={editReasons}
+          accent="blue"
+          onSubmit={handleEditSubmit}
+          onCancel={() => setShowEditModal(false)}
         />
       )}
     </div>
